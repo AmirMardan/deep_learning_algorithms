@@ -1,0 +1,12 @@
+.DS*
+*.zip
+*.pyc
+*.jpeg
+*.jpg 
+*.png
+*.gif
+
+checkpoints/
+data_manipulation.py
+
+unet.pdf
