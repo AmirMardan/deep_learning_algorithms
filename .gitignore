@@ -5,8 +5,12 @@
 *.jpg 
 *.png
 *.gif
-
+*.pptx
 checkpoints/
 data_manipulation.py
-
+*.ipynb_checkpoints
 unet.pdf
+
+
+# ===== Exceptions ======
+!schedulerLR.png
