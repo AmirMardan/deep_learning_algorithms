@@ -6,11 +6,18 @@
 *.png
 *.gif
 *.pptx
+*.tar
+*.ipynb_checkpoints
+
+
 checkpoints/
 data_manipulation.py
-*.ipynb_checkpoints
+show_results.ipynb
 unet.pdf
 
 
 # ===== Exceptions ======
 !schedulerLR.png
+metrics.csv
+!1_img_segmentation/1_unet_carvana/results/test/results/*.png
+!1_img_segmentation/1_unet_carvana/results/test/*.png

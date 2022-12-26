@@ -1,8 +1,4 @@
 import torch
-from torch import Tensor
-from typing import Any, List, Optional, Union
-import matplotlib.pyplot as plt
-from torch.utils.data import DataLoader
 
 LEARNING_RATE = 1e-4
 DEVICE = ("cpu", "cuda")[torch.cuda.is_available()]

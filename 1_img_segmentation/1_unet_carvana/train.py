@@ -1,11 +1,15 @@
+import torch
+from torch.utils.data import DataLoader
 from torch.optim import Adam 
 from tqdm import tqdm
 import tools
 from data_scripts.dataset import get_loaders
-from config import *
 from unet import UNet
 from pathlib import Path
+from torch import Tensor
+from typing import Any, List, Optional, Union
 import os 
+import pandas as pd
 
 def train(
     loader: DataLoader,
@@ -13,9 +17,10 @@ def train(
     optimizer: torch.optim.Optimizer, 
     loss_fn,  
     scaler,
-    device
+    device: torch.device,
 ):
     
+    n_loader = len(loader)
     loop = tqdm(loader)
     loss_epoch = 0.0
     model.train()
@@ -34,8 +39,7 @@ def train(
 
         loop.set_postfix(loss=loss.item())
         loss_epoch += loss.item()
-        
-    return loss_epoch
+    return loss_epoch/n_loader
         
         
 def main(imgs_path: str, masks_path: str,
@@ -68,30 +72,43 @@ def main(imgs_path: str, masks_path: str,
         batch_size=batch_size, 
         val_percentage=val_percentage,
         p=p)
-    # img, mask = next(iter(train_dl))
-    # tools.show_batch(img, mask, batch_size)
-    # plt.show()
+    
     loss_fn = torch.nn.CrossEntropyLoss() if n_classes > 1 else torch.nn.BCEWithLogitsLoss()
     optimizer = Adam(model.parameters(), lr=learning_rate)
     scaler = torch.cuda.amp.GradScaler()
-    loss = []
+    metrics = {
+        "train_loss": [],
+        "valid_loss": [],
+        "dice_accuracy": [],
+        "pixel_accuracy": [],
+        "learning_rate": []
+    }
+    
     for epoch in range(1, epochs+1):
-        loss.append(
-            train(train_dl, model, 
-            optimizer=optimizer,
-            loss_fn=loss_fn,
-            scaler=scaler,
-            device=device
+        loss = train(train_dl, model,
+              optimizer=optimizer,
+              loss_fn=loss_fn,
+              scaler=scaler,
+              device=device,
             )
-        )
+        metrics["train_loss"].append(loss)
+        metrics["learning_rate"].append(optimizer.param_groups[0]["lr"])
 
         # save model
         if (epoch % save_frequency == 0) or (epoch==epochs):
             tools.save_checkpoint(model, path_checkpoints+f"/checkpoint_{epoch}.tar")
         
         # check accuracy
-        tools.check_accuracy(loader=val_dl, model=model,
-                             device=device)
+        (pixel_accuracy,
+         dice_accuracy,
+         loss_val) = tools.check_accuracy(
+            loader=val_dl, model=model,
+            loss_fn=loss_fn,
+            device=device
+            )
+        metrics["valid_loss"].append(loss_val)
+        metrics["dice_accuracy"].append(dice_accuracy)
+        metrics["pixel_accuracy"].append(pixel_accuracy)
         
         # print some exampels
         if epoch%2 == 0 or epoch==epochs:
@@ -100,31 +117,28 @@ def main(imgs_path: str, masks_path: str,
                 folder=path_example,
                 device=device
             )
-        print(f"Epoch: {epoch} -> loss: {loss[-1]}")
-    
-    torch.save(loss, path_checkpoints + "/loss.pt")
+        print(f"Epoch: {epoch} -> loss: {metrics['train_loss'][-1]}")
+
+    df = pd.DataFrame(metrics)
+    df.to_csv(path_checkpoints+"/metrics.csv", index=False)
     
     
 if __name__ == "__main__":
-    seed_everything(seed=10)
-    data_dir, path_to_save = tools.arg_parser()
+    from default_values import *
 
-    if data_dir is None:
-        data_dir = os.path.abspath(os.path.join(__file__, "../../data/carvana"))
-    imgs_path = data_dir + "/imgs/"
-    masks_path = data_dir + "/masks/"
-    
-    if path_to_save is None:
-        path_to_save = os.path.abspath(os.path.join(__file__, "../"))
-    # print(path_to_save)
+    tools.seed_everything(seed=10)
+    (imgs_path, masks_path,
+    path_to_save, num_epochs, 
+    batch_size, val_percentage,
+    learning_rate, device) = tools.arg_parser()
     
     main(imgs_path, masks_path,
          IMAGE_HEIGHT, IMAGE_WIDTH,
-         batch_size=BATCH_SIZE,
-         val_percentage=VAL_PERCENTAGE,
-         epochs=NUM_EPOCHS, learning_rate=LEARNING_RATE,
+         batch_size=batch_size,
+         val_percentage=val_percentage,
+         epochs=num_epochs, learning_rate=learning_rate,
          p=AUGMENTATION_P, 
          path_to_save=path_to_save, save_frequency=SAVE_FREQ,
          loading_file=LOAD_MODEL,
-         features= FEATURES, n_classes=N_CLASSES,
-         n_channels= N_CHANNELS, device=DEVICE)
+         features=FEATURES, n_classes=N_CLASSES,
+         n_channels= N_CHANNELS, device=device)

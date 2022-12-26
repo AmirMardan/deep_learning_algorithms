@@ -11,7 +11,7 @@ import torch
 def _get_loaders(dataset: Dataset,
                 batch_size: int,
                 val_percentage: float = 0.1,
-                seed: int=12):
+                seed: int=10):
         
     train_data, val_data = random_split(
         dataset=dataset,
@@ -28,6 +28,24 @@ def _get_loaders(dataset: Dataset,
     return train_loader, val_loader
 
 
+def test_preparing(img_path: str,
+                   img_height: Any,
+                    img_width: Any
+                    ):
+    
+    transform = A.Compose([
+        A.Resize(height=img_height, width=img_width),
+        A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0
+        ),
+        ToTensorV2()
+    ])
+    img = np.array(Image.open(img_path).convert("RGB"))
+    return transform(image=img)["image"].unsqueeze_(0)
+    
+    
 def get_loaders(imgs_path: str,
                masks_path: str,
                img_height: Any,
@@ -54,7 +72,7 @@ def get_loaders(imgs_path: str,
 def get_transform(img_height: Any,
                   img_width:Any,
                   p:float):
-    train_transfrom = A.Compose([
+    train_transform = A.Compose([
         A.Resize(height=img_height, width=img_width),
         A.Rotate(limit=35, p=1.0),
         A.VerticalFlip(p=p),
@@ -66,17 +84,7 @@ def get_transform(img_height: Any,
         ),
         ToTensorV2()
     ])
-    
-    # val_transfrom = A.Compose([
-    #     A.Resize(height=img_height, width=img_width),
-    #     A.Normalize(
-    #         mean=[0.0, 0.0, 0.0],
-    #         std=[1.0, 1.0, 1.0],
-    #         max_pixel_value=255.0
-    #     ),
-    #     ToTensorV2()
-    # ])
-    return train_transfrom
+    return train_transform
     
     
 class CarvanaDataset(Dataset):
