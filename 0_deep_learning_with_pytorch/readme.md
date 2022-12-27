@@ -1,4 +1,4 @@
-# Basin Materials for Deep Learning Using PyTroch
+# Basic Materials for Deep Learning Using PyTroch
 
-In this folder, I practice the differnt techniques to perform a deep learning project appropriately and obtain high accuracy result.
+In this folder, I practice differnt techniques to perform a deep learning project appropriately and obtain high accuracy result.
 
