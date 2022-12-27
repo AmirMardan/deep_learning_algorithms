@@ -28,17 +28,17 @@ Other options are
 --device {cpu,cuda}         Name of device for training (cpu, cuda)
 ```
 
-Default values and other options are available in `default_values.py`. 
+Default values and other options are available in [`default_values.py`](https://github.com/AmirMardan/deep_learning_algorithms/blob/main/1_img_segmentation/1_unet_carvana/default_values.py). 
 
 ## Results
-Now, can use the trained model to segment any other car images.
+Now, we can use the trained model to segment any other car images.
 As an example, we can see here an image and the segmented result which is not a part of the Carvana dataset.
 
 ![test](./results/test/results/test.png)
 
-It seems the model could do a good sementation.
+It seems the model could do a good segmentation.
 However, almost all used images in this study had a white background. 
-This means, the accuracy should be low if we use this model to segment an image with not-white background.
+This means the accuracy should be low if we use this model to segment an image with non-white a background.
 
 ![test](./results/test/results/test1.png)
 
@@ -46,6 +46,6 @@ This means, the accuracy should be low if we use this model to segment an image 
 ![test](./results/test/results/test2.png)
 
 ## Train on Google Colab
-To train the network on Google Colab, please use the provided [jupyter notebook](https://github.com/AmirMardan/deep-learning-algorithms/blob/main/0_img_segmentation/1_unet_carvana/run_colab.ipynb).
+To train the network on Google Colab, please use the provided [jupyter notebook](https://github.com/AmirMardan/deep-learning-algorithms/blob/main/1_img_segmentation/1_unet_carvana/run_colab.ipynb).
 
 
